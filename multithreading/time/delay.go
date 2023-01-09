@@ -8,28 +8,24 @@ import (
 
 // начало решения
 
-func delay(dur time.Duration, fn func()) func() {
+func delay(duration time.Duration, fn func()) func() {
 	canceled := make(chan struct{})
 
+	timer := time.NewTimer(duration)
 	go func() {
-		time.Sleep(dur)
 		select {
-		case <-canceled:
-			return
-		default:
+		case <-timer.C:
 			fn()
+		case <-canceled:
 		}
 	}()
 
 	cancel := func() {
-		select {
-		case <-canceled:
+		if !timer.Stop() {
 			return
-		default:
-			close(canceled)
 		}
+		close(canceled)
 	}
-
 	return cancel
 }
 
