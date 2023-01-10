@@ -8,34 +8,34 @@ import (
 // начало решения
 
 type Counter struct {
-	count map[string]int
-	sync.Mutex
+	lock sync.RWMutex
+	vals map[string]int
 }
 
 func (c *Counter) Increment(str string) {
-	c.Lock()
-	defer c.Unlock()
-	c.count[str] += 1
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	c.vals[str]++
 }
 
 func (c *Counter) Value(str string) int {
-	c.Lock()
-	defer c.Unlock()
-	return c.count[str]
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+	return c.vals[str]
 }
 
 func (c *Counter) Range(fn func(key string, val int)) {
-	c.Lock()
-	defer c.Unlock()
-	for s, i := range c.count {
-		fn(s, i)
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+	for k, v := range c.vals {
+		fn(k, v)
 	}
 }
 
 func NewCounter() *Counter {
 	return &Counter{
-		count: map[string]int{},
-		Mutex: sync.Mutex{},
+		lock: sync.RWMutex{},
+		vals: map[string]int{},
 	}
 }
 
